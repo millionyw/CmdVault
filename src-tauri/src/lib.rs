@@ -1,9 +1,11 @@
 pub mod commands;
 pub mod db;
+pub mod tray;
 
 use crate::db::Database;
 use std::sync::Arc;
 use tauri::Manager;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
 pub type DbState = Arc<Database>;
 
@@ -23,9 +25,26 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_global_shortcut::build())
         .manage(db_state)
         .setup(|app| {
-            let _window = app.get_webview_window("main").unwrap();
+            // Create system tray
+            tray::create_tray(app.handle())?;
+
+            // Register global shortcut: Win+Shift+C
+            let shortcut = Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyC);
+            let app_handle = app.handle().clone();
+            app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    if window.is_visible().unwrap_or(false) {
+                        let _ = window.hide();
+                    } else {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                }
+            })?;
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
