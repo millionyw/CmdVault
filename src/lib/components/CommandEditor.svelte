@@ -62,50 +62,50 @@
   <div class="modal-overlay" onclick={onclose} role="dialog" aria-modal="true">
     <div class="modal" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header">
-        <h2>{isEditing ? '\u{7F16}\u{8F91}\u{547D}\u{4EE4}' : '\u{65B0}\u{5EFA}\u{547D}\u{4EE4}'}</h2>
-        <button class="close-btn" onclick={onclose} aria-label="\u{5173}\u{95ED}">\u{00D7}</button>
+        <h2>{isEditing ? '编辑命令' : '新建命令'}</h2>
+        <button class="close-btn" onclick={onclose} aria-label="关闭">×</button>
       </div>
 
       <div class="modal-body">
         <div class="form-group">
-          <label for="name">\u{540D}\u{79F0} *</label>
+          <label for="name">名称 *</label>
           <input
             id="name"
             type="text"
             bind:value={name}
-            placeholder="\u{547D}\u{4EE4}\u{540D}\u{79F0}"
+            placeholder="命令名称"
           />
         </div>
 
         <div class="form-group">
-          <label for="content">\u{5185}\u{5BB9} *</label>
+          <label for="content">内容 *</label>
           <textarea
             id="content"
             bind:value={content}
-            placeholder="\u{547D}\u{4EE4}\u{5185}\u{5BB9}"
+            placeholder="命令内容"
             rows="5"
           ></textarea>
         </div>
 
         <div class="form-group">
-          <label for="description">\u{63CF}\u{8FF0}</label>
+          <label for="description">描述</label>
           <input
             id="description"
             type="text"
             bind:value={description}
-            placeholder="\u{53EF}\u{9009}\u{63CF}\u{8FF0}"
+            placeholder="可选描述"
           />
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={onclose}>\u{53D6}\u{6D88}</button>
+        <button class="btn btn-secondary" onclick={onclose}>取消</button>
         <button
           class="btn btn-primary"
           onclick={handleSave}
           disabled={saving || !name.trim() || !content.trim()}
         >
-          {saving ? '\u{4FDD}\u{5B58}\u{4E2D}...' : '\u{4FDD}\u{5B58}'}
+          {saving ? '保存中...' : '保存'}
         </button>
       </div>
     </div>

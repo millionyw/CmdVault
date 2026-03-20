@@ -7,7 +7,7 @@
     onclose?: () => void;
   }
 
-  let { message = '\u{5DF2}\u{590D}\u{5236}\u{5230}\u{526A}\u{8D34}\u{677F}', duration = 1500, onclose }: Props = $props();
+  let { message = '已复制到剪贴板', duration = 1500, onclose }: Props = $props();
 
   let visible = $state(false);
 
@@ -23,7 +23,7 @@
 </script>
 
 <div class="toast" class:visible>
-  <span class="toast-icon">\u{2705}</span>
+  <span class="toast-icon">&#x2705;</span>
   <span class="toast-message">{message}</span>
 </div>
 

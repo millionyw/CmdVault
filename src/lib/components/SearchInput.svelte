@@ -9,7 +9,7 @@
 </script>
 
 <div class="search-container">
-  <span class="search-icon">\u{1F50D}</span>
+  <span class="search-icon">&#x1F50D;</span>
   <input
     type="text"
     placeholder="Search commands..."

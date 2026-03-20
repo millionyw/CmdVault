@@ -37,10 +37,10 @@
         try {
           const json = event.target?.result as string;
           const count = await commands.import(json);
-          alert(`\u{6210}\u{529F}\u{5BFC}\u{5165} ${count} \u{6761}\u{547D}\u{4EE4}`);
+          alert(`成功导入 ${count} 条命令`);
         } catch (e) {
           console.error('Import failed:', e);
-          alert('\u{5BFC}\u{5165}\u{5931}\u{8D25}\u{FF0C}\u{8BF7}\u{68C0}\u{67E5}\u{6587}\u{4EF6}\u{683C}\u{5F0F}');
+          alert('导入失败，请检查文件格式');
         }
       };
       reader.readAsText(file);
@@ -61,54 +61,54 @@
   <div class="modal-overlay" onclick={onclose} role="dialog" aria-modal="true">
     <div class="modal" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header">
-        <h2>\u{8BBE}\u{7F6E}</h2>
-        <button class="close-btn" onclick={onclose} aria-label="\u{5173}\u{95ED}">\u{00D7}</button>
+        <h2>设置</h2>
+        <button class="close-btn" onclick={onclose} aria-label="关闭">×</button>
       </div>
 
       <div class="modal-body">
         <section class="settings-section">
-          <h3>\u{5FEB}\u{6377}\u{952E}</h3>
+          <h3>快捷键</h3>
           <div class="setting-item">
-            <span>\u{5168}\u{5C40}\u{5FEB}\u{6377}\u{952E}</span>
+            <span>全局快捷键</span>
             <code class="shortcut-badge">{$settings.shortcut}</code>
           </div>
-          <p class="hint">\u{6309}\u{4E0B}\u{5FEB}\u{6377}\u{952E}\u{53EF}\u{5FEB}\u{901F}\u{6253}\u{5F00}\u{5E94}\u{7528}</p>
+          <p class="hint">按下快捷键可快速打开应用</p>
         </section>
 
         <section class="settings-section">
-          <h3>\u{6570}\u{636E}\u{7BA1}\u{7406}</h3>
+          <h3>数据管理</h3>
           <div class="button-group">
             <button class="btn btn-secondary" onclick={handleExport}>
-              <span class="btn-icon">\u{1F4E4}</span>
-              \u{5BFC}\u{51FA}
+              <span class="btn-icon">&#x1F4E4;</span>
+              导出
             </button>
             <button class="btn btn-secondary" onclick={handleImport}>
-              <span class="btn-icon">\u{1F4E5}</span>
-              \u{5BFC}\u{5165}
+              <span class="btn-icon">&#x1F4E5;</span>
+              导入
             </button>
           </div>
-          <p class="hint">\u{5BFC}\u{51FA}\u{4E3A JSON \u{683C}\u{5F0F}\u{FF0C}\u{53EF}\u{7528}\u{4E8E}\u{5907}\u{4EFD}\u{6216}\u{8FC1}\u{79FB}</p>
+          <p class="hint">导出为 JSON 格式，可用于备份或迁移</p>
         </section>
 
         <section class="settings-section">
-          <h3>GitHub \u{540C}\u{6B65}</h3>
+          <h3>GitHub 同步</h3>
           <div class="setting-item disabled">
             <span>GitHub Token</span>
-            <input type="password" placeholder="\u{672A}\u{914D}\u{7F6E}" disabled />
+            <input type="password" placeholder="未配置" disabled />
           </div>
           <div class="setting-item disabled">
             <span>Gist ID</span>
-            <input type="text" placeholder="\u{672A}\u{914D}\u{7F6E}" disabled />
+            <input type="text" placeholder="未配置" disabled />
           </div>
           <button class="btn btn-primary" disabled>
-            \u{5F00}\u{542F}\u{540C}\u{6B65} (\u{5373}\u{5C06}\u{63A8}\u{51FA})
+            开启同步 (即将推出)
           </button>
-          <p class="hint">\u{901A}\u{8FC7 GitHub Gist \u{540C}\u{6B65}\u{547D}\u{4EE4}\u{5230}\u{4E91}\u{7AEF}</p>
+          <p class="hint">通过 GitHub Gist 同步命令到云端</p>
         </section>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={onclose}>\u{5173}\u{95ED}</button>
+        <button class="btn btn-secondary" onclick={onclose}>关闭</button>
       </div>
     </div>
   </div>
