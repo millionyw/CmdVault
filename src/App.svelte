@@ -9,6 +9,7 @@
   import Toast from './lib/components/Toast.svelte';
   import { commands, filteredCommands } from './lib/stores/commands';
   import type { Command } from './lib/stores/commands';
+  import { exportToFile, importFromFile } from './lib/utils/fileOperations';
 
   const appWindow = getCurrentWindow();
 
@@ -18,6 +19,7 @@
   let toastMessage = $state('');
   let showToast = $state(false);
   let selectedIndex = $state(0);
+  let cleanupFns: (() => void)[] = [];
 
   // Load commands on mount
   onMount(async () => {
@@ -32,14 +34,28 @@
       editingCommand = undefined;
       editorOpen = true;
     });
+    cleanupFns.push(unlistenNewCommand);
 
     const unlistenSettings = await listen('tray:settings', () => {
       settingsOpen = true;
     });
+    cleanupFns.push(unlistenSettings);
 
+    const unlistenExport = await listen('tray:export', () => {
+      exportToFile(showToastMessage, showToastMessage);
+    });
+    cleanupFns.push(unlistenExport);
+
+    const unlistenImport = await listen('tray:import', () => {
+      importFromFile(showToastMessage, showToastMessage);
+    });
+    cleanupFns.push(unlistenImport);
+  });
+
+  // Cleanup listeners when component is destroyed
+  $effect(() => {
     return () => {
-      unlistenNewCommand();
-      unlistenSettings();
+      cleanupFns.forEach(fn => fn());
     };
   });
 
@@ -112,6 +128,20 @@
           }
         }
       }
+      return;
+    }
+
+    // Ctrl+Shift+E: export
+    if (event.key === 'E' && event.shiftKey && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      exportToFile(showToastMessage, showToastMessage);
+      return;
+    }
+
+    // Ctrl+Shift+I: import
+    if (event.key === 'I' && event.shiftKey && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      importFromFile(showToastMessage, showToastMessage);
       return;
     }
   }
