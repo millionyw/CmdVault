@@ -1,8 +1,6 @@
-use crate::db::Database;
-use std::sync::Arc;
 use tauri::State;
 
-pub type DbState = Arc<Database>;
+use super::DbState;
 
 /// Export all commands as JSON string
 #[tauri::command]

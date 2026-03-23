@@ -9,6 +9,7 @@
   import Toast from './lib/components/Toast.svelte';
   import { commands, filteredCommands } from './lib/stores/commands';
   import type { Command } from './lib/stores/commands';
+  import { settings } from './lib/stores/settings';
   import { exportToFile, importFromFile } from './lib/utils/fileOperations';
 
   const appWindow = getCurrentWindow();
@@ -50,6 +51,29 @@
       importFromFile(showToastMessage, showToastMessage);
     });
     cleanupFns.push(unlistenImport);
+
+    const unlistenSyncPush = await listen('tray:sync-push', async () => {
+      try {
+        await settings.pushToGist();
+        showToastMessage('推送成功');
+      } catch (e) {
+        console.error('Sync push failed:', e);
+        showToastMessage('推送失败');
+      }
+    });
+    cleanupFns.push(unlistenSyncPush);
+
+    const unlistenSyncPull = await listen('tray:sync-pull', async () => {
+      try {
+        await settings.pullFromGist();
+        await commands.load();
+        showToastMessage('拉取成功');
+      } catch (e) {
+        console.error('Sync pull failed:', e);
+        showToastMessage('拉取失败');
+      }
+    });
+    cleanupFns.push(unlistenSyncPull);
   });
 
   // Cleanup listeners when component is destroyed

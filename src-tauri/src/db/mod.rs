@@ -3,11 +3,12 @@ pub mod schema;
 use rusqlite::{Connection, Result as SqliteResult};
 use schema::{Command, NewCommand, UpdateCommand};
 use std::path::Path;
+use std::sync::Mutex;
 use uuid::Uuid;
 use chrono::Utc;
 
 pub struct Database {
-    conn: Connection,
+    conn: Mutex<Connection>,
 }
 
 impl Database {
@@ -43,12 +44,13 @@ impl Database {
             [],
         )?;
 
-        Ok(Database { conn })
+        Ok(Database { conn: Mutex::new(conn) })
     }
 
     /// Get all commands sorted by usage_count DESC, updated_at DESC
     pub fn get_all_commands(&self) -> SqliteResult<Vec<Command>> {
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT id, name, content, description, created_at, updated_at, usage_count
              FROM commands
              ORDER BY usage_count DESC, updated_at DESC"
@@ -73,8 +75,9 @@ impl Database {
     pub fn create_command(&self, new_cmd: NewCommand) -> SqliteResult<Command> {
         let id = Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
+        let conn = self.conn.lock().unwrap();
 
-        self.conn.execute(
+        conn.execute(
             "INSERT INTO commands (id, name, content, description, created_at, updated_at, usage_count)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0)",
             rusqlite::params![
@@ -101,28 +104,31 @@ impl Database {
     /// Update existing command
     pub fn update_command(&self, update_cmd: UpdateCommand) -> SqliteResult<Command> {
         let now = Utc::now().to_rfc3339();
+        {
+            let conn = self.conn.lock().unwrap();
+            conn.execute(
+                "UPDATE commands
+                 SET name = ?1, content = ?2, description = ?3, updated_at = ?4
+                 WHERE id = ?5",
+                rusqlite::params![
+                    &update_cmd.name,
+                    &update_cmd.content,
+                    &update_cmd.description,
+                    &now,
+                    &update_cmd.id,
+                ],
+            )?;
+        }
 
-        self.conn.execute(
-            "UPDATE commands
-             SET name = ?1, content = ?2, description = ?3, updated_at = ?4
-             WHERE id = ?5",
-            rusqlite::params![
-                &update_cmd.name,
-                &update_cmd.content,
-                &update_cmd.description,
-                &now,
-                &update_cmd.id,
-            ],
-        )?;
-
-        // Fetch the updated command
+        // Fetch the updated command (separate lock scope)
         self.get_command_by_id(&update_cmd.id)?
             .ok_or_else(|| rusqlite::Error::QueryReturnedNoRows)
     }
 
     /// Get a command by ID
     pub fn get_command_by_id(&self, id: &str) -> SqliteResult<Option<Command>> {
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT id, name, content, description, created_at, updated_at, usage_count
              FROM commands WHERE id = ?1"
         )?;
@@ -147,7 +153,8 @@ impl Database {
 
     /// Delete command by id
     pub fn delete_command(&self, id: &str) -> SqliteResult<()> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "DELETE FROM commands WHERE id = ?1",
             [id],
         )?;
@@ -156,7 +163,8 @@ impl Database {
 
     /// Increment usage_count
     pub fn increment_usage(&self, id: &str) -> SqliteResult<()> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "UPDATE commands SET usage_count = usage_count + 1, updated_at = ?1 WHERE id = ?2",
             rusqlite::params![
                 Utc::now().to_rfc3339(),
@@ -168,7 +176,8 @@ impl Database {
 
     /// Get setting by key
     pub fn get_setting(&self, key: &str) -> SqliteResult<Option<String>> {
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT value FROM settings WHERE key = ?1"
         )?;
 
@@ -182,7 +191,8 @@ impl Database {
 
     /// Set setting by key
     pub fn set_setting(&self, key: &str, value: &str) -> SqliteResult<()> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?1, ?2)",
             [key, value],
         )?;
@@ -212,9 +222,10 @@ impl Database {
 
     /// Import commands from JSON (full format with all fields)
     pub fn import_commands(&self, commands: Vec<Command>) -> SqliteResult<usize> {
+        let conn = self.conn.lock().unwrap();
         let mut count = 0;
         for cmd in commands {
-            self.conn.execute(
+            conn.execute(
                 "INSERT OR REPLACE INTO commands (id, name, content, description, created_at, updated_at, usage_count)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                 rusqlite::params![
@@ -235,7 +246,8 @@ impl Database {
     /// Search commands by name or content
     pub fn search_commands(&self, query: &str) -> SqliteResult<Vec<Command>> {
         let pattern = format!("%{}%", query);
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT id, name, content, description, created_at, updated_at, usage_count
              FROM commands
              WHERE name LIKE ?1 OR content LIKE ?1 OR description LIKE ?1

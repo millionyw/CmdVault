@@ -119,7 +119,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -128,7 +128,7 @@
   }
 
   .modal {
-    background: var(--bg-primary, #1a1a1a);
+    background: #1a1a1a;
     border-radius: 12px;
     width: 100%;
     max-width: 480px;
@@ -144,21 +144,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color, #333);
+    border-bottom: 1px solid #333;
+    background: #1a1a1a;
   }
 
   .modal-header h2 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary, #fff);
+    color: #fff;
   }
 
   .close-btn {
     background: transparent;
     border: none;
     font-size: 1.5rem;
-    color: var(--text-secondary, #888);
+    color: #888;
     cursor: pointer;
     padding: 0;
     line-height: 1;
@@ -171,13 +172,14 @@
   }
 
   .close-btn:hover {
-    background: var(--bg-hover, #333);
-    color: var(--text-primary, #fff);
+    background: #333;
+    color: #fff;
   }
 
   .modal-body {
     padding: 1.25rem;
     overflow-y: auto;
+    background: #1a1a1a;
   }
 
   .form-group {
@@ -192,7 +194,7 @@
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--text-secondary, #aaa);
+    color: #aaa;
     margin-bottom: 0.5rem;
   }
 
@@ -200,10 +202,10 @@
   textarea {
     width: 100%;
     padding: 0.6rem 0.8rem;
-    background: var(--bg-secondary, #2a2a2a);
-    border: 1px solid var(--border-color, #333);
+    background: #2a2a2a;
+    border: 1px solid #333;
     border-radius: 6px;
-    color: var(--text-primary, #fff);
+    color: #fff;
     font-size: 0.9rem;
     font-family: inherit;
     resize: vertical;
@@ -212,12 +214,12 @@
   input[type="text"]:focus,
   textarea:focus {
     outline: none;
-    border-color: var(--primary, #3b82f6);
+    border-color: #3b82f6;
   }
 
   input[type="text"]::placeholder,
   textarea::placeholder {
-    color: var(--text-muted, #666);
+    color: #666;
   }
 
   .modal-footer {
@@ -225,7 +227,8 @@
     justify-content: flex-end;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-color, #333);
+    border-top: 1px solid #333;
+    background: #1a1a1a;
   }
 
   .btn {
@@ -244,21 +247,21 @@
   }
 
   .btn-primary {
-    background: var(--primary, #3b82f6);
+    background: #3b82f6;
     color: white;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--primary-hover, #2563eb);
+    background: #2563eb;
   }
 
   .btn-secondary {
-    background: var(--bg-secondary, #2a2a2a);
-    color: var(--text-primary, #fff);
-    border: 1px solid var(--border-color, #333);
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #333;
   }
 
   .btn-secondary:hover {
-    background: var(--bg-hover, #333);
+    background: #333;
   }
 </style>

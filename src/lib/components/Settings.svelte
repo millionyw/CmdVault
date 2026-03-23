@@ -41,6 +41,99 @@
     }
   }
 
+  // Sync state
+  let token = $state('');
+  let deviceName = $state('My Device');
+  let manualGistId = $state('');
+  let syncLoading = $state(false);
+
+  // Load sync status on mount
+  $effect(() => {
+    if (open) {
+      settings.getSyncStatus().then(status => {
+        if (status.device_name) {
+          deviceName = status.device_name;
+        }
+      });
+    }
+  });
+
+  async function handleConnect() {
+    if (!token.trim()) {
+      alert('请输入 GitHub Token');
+      return;
+    }
+    syncLoading = true;
+    try {
+      await settings.connectWithToken(token, deviceName);
+      token = '';
+      alert('连接成功');
+    } catch (e) {
+      alert('连接失败: ' + (e as Error).message);
+    } finally {
+      syncLoading = false;
+    }
+  }
+
+  async function handleDisconnect() {
+    if (confirm('确定断开 GitHub 连接？')) {
+      try {
+        await settings.disconnect();
+        alert('已断开连接');
+      } catch (e) {
+        alert('断开失败');
+      }
+    }
+  }
+
+  async function handlePush() {
+    syncLoading = true;
+    try {
+      await settings.pushToGist();
+      alert('推送成功');
+    } catch (e) {
+      alert('推送失败: ' + (e as Error).message);
+    } finally {
+      syncLoading = false;
+    }
+  }
+
+  async function handlePull() {
+    syncLoading = true;
+    try {
+      await settings.pullFromGist();
+      alert('拉取成功');
+    } catch (e) {
+      alert('拉取失败: ' + (e as Error).message);
+    } finally {
+      syncLoading = false;
+    }
+  }
+
+  async function handleLinkGist() {
+    if (!manualGistId.trim()) {
+      alert('请输入 Gist ID');
+      return;
+    }
+    try {
+      await settings.linkGist(manualGistId);
+      alert('关联成功');
+      manualGistId = '';
+    } catch (e) {
+      alert('关联失败');
+    }
+  }
+
+  async function handleCopyGistId() {
+    try {
+      const id = await settings.copyGistId();
+      await navigator.clipboard.writeText(id);
+      alert('已复制 Gist ID');
+    } catch (e) {
+      alert('复制失败');
+    }
+  }
+
   async function handleExport() {
     await exportToFile(
       (msg) => alert(msg),
@@ -110,18 +203,93 @@
 
         <section class="settings-section">
           <h3>GitHub 同步</h3>
-          <div class="setting-item disabled">
-            <span>GitHub Token</span>
-            <input type="password" placeholder="未配置" disabled />
-          </div>
-          <div class="setting-item disabled">
-            <span>Gist ID</span>
-            <input type="text" placeholder="未配置" disabled />
-          </div>
-          <button class="btn btn-primary" disabled>
-            开启同步 (即将推出)
-          </button>
-          <p class="hint">通过 GitHub Gist 同步命令到云端</p>
+
+          {#if $settings.sync.connected}
+            <div class="sync-status connected">
+              <span class="status-dot"></span>
+              <span>已连接</span>
+            </div>
+
+            {#if $settings.sync.gist_id}
+              <div class="setting-item">
+                <span>Gist ID</span>
+                <code class="gist-id">{$settings.sync.gist_id.slice(0, 12)}...</code>
+              </div>
+            {/if}
+
+            {#if $settings.sync.device_name}
+              <div class="setting-item">
+                <span>设备</span>
+                <span>{$settings.sync.device_name}</span>
+              </div>
+            {/if}
+
+            {#if $settings.sync.last_sync}
+              <div class="setting-item">
+                <span>最后同步</span>
+                <span>{new Date($settings.sync.last_sync).toLocaleString()}</span>
+              </div>
+            {/if}
+
+            <div class="button-group">
+              <button class="btn btn-secondary" onclick={handlePush} disabled={syncLoading}>
+                手动推送
+              </button>
+              <button class="btn btn-secondary" onclick={handlePull} disabled={syncLoading}>
+                手动拉取
+              </button>
+            </div>
+
+            <div class="setting-item">
+              <span>手动关联 Gist</span>
+              <input
+                type="text"
+                bind:value={manualGistId}
+                placeholder="输入 Gist ID"
+              />
+            </div>
+            <button class="btn btn-secondary btn-small" onclick={handleLinkGist}>
+              关联
+            </button>
+
+            <div class="button-group">
+              <button class="btn btn-secondary btn-small" onclick={handleCopyGistId}>
+                复制 Gist ID
+              </button>
+              <button class="btn btn-danger btn-small" onclick={handleDisconnect}>
+                断开连接
+              </button>
+            </div>
+          {:else}
+            <div class="sync-status disconnected">
+              <span class="status-dot"></span>
+              <span>未连接</span>
+            </div>
+
+            <div class="setting-item">
+              <span>Token</span>
+              <input
+                type="password"
+                bind:value={token}
+                placeholder="ghp_xxxx..."
+              />
+            </div>
+
+            <div class="setting-item">
+              <span>设备名称</span>
+              <input
+                type="text"
+                bind:value={deviceName}
+                placeholder="My Device"
+              />
+            </div>
+
+            <button class="btn btn-primary" onclick={handleConnect} disabled={syncLoading}>
+              连接
+            </button>
+          {/if}
+
+          <p class="hint">需要 gist 权限的 GitHub Personal Access Token</p>
         </section>
       </div>
 
@@ -324,5 +492,52 @@
     padding: 1rem 1.25rem;
     border-top: 1px solid #333;
     background: #1a1a1a;
+  }
+
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: #2a2a2a;
+    border-radius: 4px;
+  }
+
+  .sync-status.connected {
+    color: #22c55e;
+  }
+
+  .sync-status.disconnected {
+    color: #888;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .gist-id {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: #333;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-danger {
+    background: #dc2626;
+    color: white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
   }
 </style>

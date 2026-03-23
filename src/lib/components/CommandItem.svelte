@@ -5,9 +5,10 @@
     command: Command;
     selected?: boolean;
     onclick?: () => void;
+    onmouseenter?: () => void;
   }
 
-  let { command, selected = false, onclick }: Props = $props();
+  let { command, selected = false, onclick, onmouseenter }: Props = $props();
 
   function formatPreview(content: string, maxLength: number = 60): string {
     const trimmed = content.trim().replace(/\n/g, ' ');
@@ -22,6 +23,7 @@
   role="button"
   tabindex="0"
   {onclick}
+  {onmouseenter}
 >
   <div class="item-content">
     <div class="item-header">

@@ -28,3 +28,8 @@ dist-ssr
 
 # Tauri
 src-tauri/target
+src-tauri/gen
+.gitnexus/*
+.claude/*
+commands-*.json
+icon_example.png

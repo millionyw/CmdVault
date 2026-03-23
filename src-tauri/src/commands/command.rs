@@ -1,9 +1,8 @@
 use crate::db::schema::{Command, NewCommand, UpdateCommand};
-use crate::db::Database;
-use std::sync::Arc;
 use tauri::State;
+use clipboard::ClipboardProvider;
 
-pub type DbState = Arc<Database>;
+use super::DbState;
 
 /// Get all commands sorted by usage count
 #[tauri::command]

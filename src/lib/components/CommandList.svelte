@@ -3,12 +3,18 @@
   import CommandItem from './CommandItem.svelte';
   import EmptyState from './EmptyState.svelte';
 
-  let selectedIndex = $state(0);
+  interface Props {
+    selectedIndex?: number;
+    onSelectedIndexChange?: (index: number) => void;
+    onCopy?: (id: string) => void;
+  }
+
+  let { selectedIndex = 0, onSelectedIndexChange, onCopy }: Props = $props();
 
   $effect(() => {
     // Reset selection when filtered commands change
     $filteredCommands;
-    selectedIndex = 0;
+    onSelectedIndexChange?.(0);
   });
 
   function handleKeydown(event: KeyboardEvent) {
@@ -16,22 +22,28 @@
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      selectedIndex = Math.min(selectedIndex + 1, count - 1);
+      const newIndex = Math.min(selectedIndex + 1, count - 1);
+      onSelectedIndexChange?.(newIndex);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      selectedIndex = Math.max(selectedIndex - 1, 0);
+      const newIndex = Math.max(selectedIndex - 1, 0);
+      onSelectedIndexChange?.(newIndex);
     } else if (event.key === 'Enter' && count > 0) {
       event.preventDefault();
       const selected = $filteredCommands[selectedIndex];
       if (selected) {
-        handleCopy(selected.id);
+        onCopy?.(selected.id);
       }
     }
   }
 
-  async function handleCopy(id: string) {
-    const { commands } = await import('../stores/commands');
-    await commands.copy(id);
+  function handleItemClick(index: number, id: string) {
+    onSelectedIndexChange?.(index);
+    onCopy?.(id);
+  }
+
+  function handleItemHover(index: number) {
+    onSelectedIndexChange?.(index);
   }
 
   function handleCreateSample() {
@@ -49,7 +61,8 @@
       <CommandItem
         {command}
         selected={index === selectedIndex}
-        onclick={() => handleCopy(command.id)}
+        onclick={() => handleItemClick(index, command.id)}
+        onmouseenter={() => handleItemHover(index)}
       />
     {/each}
   {/if}

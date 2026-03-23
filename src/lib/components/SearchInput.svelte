@@ -1,11 +1,36 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
   import { searchQuery } from '../stores/commands';
+
+  let inputElement: HTMLInputElement;
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       searchQuery.set('');
     }
   }
+
+  function focusInput() {
+    inputElement?.focus();
+  }
+
+  onMount(() => {
+    // Focus on mount
+    focusInput();
+
+    // Focus when window gains focus
+    const appWindow = getCurrentWindow();
+    const unlisten = appWindow.onFocusChanged(({ payload: focused }) => {
+      if (focused) {
+        focusInput();
+      }
+    });
+
+    return () => {
+      unlisten.then(fn => fn());
+    };
+  });
 </script>
 
 <div class="search-container">
@@ -14,6 +39,7 @@
     type="text"
     placeholder="Search commands..."
     bind:value={$searchQuery}
+    bind:this={inputElement}
     onkeydown={handleKeydown}
   />
   {#if $searchQuery}

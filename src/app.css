@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,55 +14,34 @@
   --primary-hover: #2563eb;
   --success: #22c55e;
 
-  /* Dark theme (default) */
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2a2a2a;
-  --bg-tertiary: #333;
-  --bg-hover: #333;
-  --bg-selected: #3d3d3d;
-  --bg-toast: #1a1a1a;
+  /* Dark theme (default) - pure black background */
+  --bg-primary: rgba(0, 0, 0, 0.95);
+  --bg-secondary: rgba(18, 18, 18, 0.98);
+  --bg-tertiary: rgba(28, 28, 28, 0.98);
+  --bg-hover: rgba(38, 38, 38, 0.98);
+  --bg-selected: rgba(48, 48, 48, 0.98);
+  --bg-toast: rgba(0, 0, 0, 0.98);
 
   --text-primary: #ffffff;
-  --text-secondary: #aaaaaa;
-  --text-tertiary: #888888;
-  --text-muted: #666666;
+  --text-secondary: #e0e0e0;
+  --text-tertiary: #b0b0b0;
+  --text-muted: #808080;
 
-  --border: #333333;
-  --border-color: #333333;
+  --border: rgba(60, 60, 60, 0.98);
+  --border-color: rgba(60, 60, 60, 0.98);
 
-  --scrollbar-thumb: #444444;
-  --scrollbar-thumb-hover: #555555;
+  --scrollbar-thumb: #404040;
+  --scrollbar-thumb-hover: #505050;
 
   color: var(--text-primary);
-  background-color: var(--bg-primary);
+  background-color: transparent;
 }
 
+/* Force dark theme - black background + white text */
 @media (prefers-color-scheme: light) {
   :root {
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --success: #22c55e;
-
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-tertiary: #e5e5e5;
-    --bg-hover: #eeeeee;
-    --bg-selected: #e0e0e0;
-    --bg-toast: #ffffff;
-
-    --text-primary: #213547;
-    --text-secondary: #666666;
-    --text-tertiary: #888888;
-    --text-muted: #999999;
-
-    --border: #dddddd;
-    --border-color: #dddddd;
-
-    --scrollbar-thumb: #cccccc;
-    --scrollbar-thumb-hover: #bbbbbb;
-
     color: var(--text-primary);
-    background-color: var(--bg-primary);
+    background-color: transparent;
   }
 }
 
@@ -74,6 +53,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: transparent;
 }
 
 #app {
@@ -81,6 +61,9 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-primary);
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 /* Global button styles */
