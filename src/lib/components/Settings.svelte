@@ -11,14 +11,14 @@
   let { open, onclose }: Props = $props();
 
   async function handleExport() {
-    exportToFile(
+    await exportToFile(
       (msg) => alert(msg),
       (msg) => alert(msg)
     );
   }
 
   async function handleImport() {
-    importFromFile(
+    await importFromFile(
       (msg) => alert(msg),
       (msg) => alert(msg)
     );
