@@ -1,6 +1,7 @@
 <script lang="ts">
   import { settings } from '../stores/settings';
   import { commands } from '../stores/commands';
+  import { exportToFile, importFromFile } from '../utils/fileOperations';
 
   interface Props {
     open: boolean;
@@ -10,42 +11,17 @@
   let { open, onclose }: Props = $props();
 
   async function handleExport() {
-    try {
-      const json = await commands.export();
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `commands-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('Export failed:', e);
-    }
+    exportToFile(
+      (msg) => alert(msg),
+      (msg) => alert(msg)
+    );
   }
 
   async function handleImport() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const json = event.target?.result as string;
-          const count = await commands.import(json);
-          alert(`成功导入 ${count} 条命令`);
-        } catch (e) {
-          console.error('Import failed:', e);
-          alert('导入失败，请检查文件格式');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
+    importFromFile(
+      (msg) => alert(msg),
+      (msg) => alert(msg)
+    );
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -121,7 +97,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -130,7 +106,7 @@
   }
 
   .modal {
-    background: var(--bg-primary, #1a1a1a);
+    background: #1a1a1a;
     border-radius: 12px;
     width: 100%;
     max-width: 480px;
@@ -146,21 +122,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color, #333);
+    border-bottom: 1px solid #333;
+    background: #1a1a1a;
   }
 
   .modal-header h2 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary, #fff);
+    color: #fff;
   }
 
   .close-btn {
     background: transparent;
     border: none;
     font-size: 1.5rem;
-    color: var(--text-secondary, #888);
+    color: #888;
     cursor: pointer;
     padding: 0;
     line-height: 1;
@@ -173,19 +150,20 @@
   }
 
   .close-btn:hover {
-    background: var(--bg-hover, #333);
-    color: var(--text-primary, #fff);
+    background: #333;
+    color: #fff;
   }
 
   .modal-body {
     padding: 1.25rem;
     overflow-y: auto;
+    background: #1a1a1a;
   }
 
   .settings-section {
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color, #333);
+    border-bottom: 1px solid #333;
   }
 
   .settings-section:last-child {
@@ -198,7 +176,7 @@
     margin: 0 0 1rem 0;
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-primary, #fff);
+    color: #fff;
   }
 
   .setting-item {
@@ -206,7 +184,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 0;
-    color: var(--text-secondary, #aaa);
+    color: #aaa;
   }
 
   .setting-item.disabled {
@@ -215,21 +193,22 @@
 
   .setting-item input {
     padding: 0.4rem 0.6rem;
-    background: var(--bg-secondary, #2a2a2a);
-    border: 1px solid var(--border-color, #333);
+    background: #2a2a2a;
+    border: 1px solid #333;
     border-radius: 4px;
-    color: var(--text-primary, #fff);
+    color: #fff;
     font-size: 0.85rem;
     width: 150px;
     text-align: right;
   }
 
   .shortcut-badge {
-    background: var(--bg-tertiary, #333);
+    background: #333;
     padding: 0.3rem 0.6rem;
     border-radius: 4px;
     font-size: 0.8rem;
     font-family: monospace;
+    color: #fff;
   }
 
   .button-group {
@@ -261,27 +240,27 @@
   }
 
   .btn-primary {
-    background: var(--primary, #3b82f6);
+    background: #3b82f6;
     color: white;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--primary-hover, #2563eb);
+    background: #2563eb;
   }
 
   .btn-secondary {
-    background: var(--bg-secondary, #2a2a2a);
-    color: var(--text-primary, #fff);
-    border: 1px solid var(--border-color, #333);
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #333;
   }
 
   .btn-secondary:hover:not(:disabled) {
-    background: var(--bg-hover, #333);
+    background: #333;
   }
 
   .hint {
     font-size: 0.75rem;
-    color: var(--text-muted, #666);
+    color: #666;
     margin: 0.5rem 0 0 0;
   }
 
@@ -290,6 +269,7 @@
     justify-content: flex-end;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-color, #333);
+    border-top: 1px solid #333;
+    background: #1a1a1a;
   }
 </style>
