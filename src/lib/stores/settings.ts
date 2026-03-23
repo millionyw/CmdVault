@@ -88,6 +88,44 @@ function createSettingsStore() {
         throw e;
       }
     },
+
+    async getSyncStatus(): Promise<SyncStatus> {
+      try {
+        return await invoke<SyncStatus>('get_sync_status');
+      } catch (e) {
+        console.error('Failed to get sync status:', e);
+        return { connected: false };
+      }
+    },
+
+    async connectWithToken(token: string, deviceName: string): Promise<SyncStatus> {
+      const status = await invoke<SyncStatus>('connect_with_token', { token, deviceName });
+      update(s => ({ ...s, sync: status }));
+      return status;
+    },
+
+    async disconnect(): Promise<void> {
+      await invoke('disconnect');
+      update(s => ({ ...s, sync: { connected: false } }));
+    },
+
+    async pushToGist(): Promise<void> {
+      const result = await invoke<{ message: string }>('push_to_gist');
+      console.log(result.message);
+    },
+
+    async pullFromGist(): Promise<void> {
+      const result = await invoke<{ message: string }>('pull_from_gist');
+      console.log(result.message);
+    },
+
+    async linkGist(gistId: string): Promise<void> {
+      await invoke('link_gist', { gistId });
+    },
+
+    async copyGistId(): Promise<string> {
+      return await invoke<string>('copy_gist_id');
+    },
   };
 }
 
