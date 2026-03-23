@@ -10,6 +10,8 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<TrayIcon<R>, Box<dy
     let new_command_item = MenuItem::with_id(app, "new_command", "新建命令", true, None::<&str>)?;
     let export_item = MenuItem::with_id(app, "export", "导出到文件...", true, None::<&str>)?;
     let import_item = MenuItem::with_id(app, "import", "从文件导入...", true, None::<&str>)?;
+    let sync_push_item = MenuItem::with_id(app, "sync_push", "推送到 GitHub", true, None::<&str>)?;
+    let sync_pull_item = MenuItem::with_id(app, "sync_pull", "从 GitHub 拉取", true, None::<&str>)?;
     let settings_item = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
 
@@ -23,6 +25,8 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<TrayIcon<R>, Box<dy
         &new_command_item,
         &export_item,
         &import_item,
+        &sync_push_item,
+        &sync_pull_item,
         &separator2,
         &settings_item,
         &quit_item,
@@ -76,6 +80,20 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<TrayIcon<R>, Box<dy
                         let _ = window.show();
                         let _ = window.set_focus();
                         let _ = app.emit("tray:import", ());
+                    }
+                }
+                "sync_push" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        let _ = app.emit("tray:sync-push", ());
+                    }
+                }
+                "sync_pull" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        let _ = app.emit("tray:sync-pull", ());
                     }
                 }
                 "quit" => {
