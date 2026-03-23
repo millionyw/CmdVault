@@ -277,6 +277,9 @@ pub async fn connect_with_token(
     // Verify token
     let username = verify_token(&token).await?;
 
+    // Save token BEFORE any gist operations to prevent orphaned gists
+    save_token(&token)?;
+
     // Save device name
     db.set_setting("device_name", &device_name)
         .map_err(|e: rusqlite::Error| e.to_string())?;
@@ -306,9 +309,6 @@ pub async fn connect_with_token(
             id
         }
     };
-
-    // Save token
-    save_token(&token)?;
 
     Ok(SyncStatus {
         connected: true,
