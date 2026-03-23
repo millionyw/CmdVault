@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
+  import { listen } from '@tauri-apps/api/event';
   import SearchInput from './lib/components/SearchInput.svelte';
   import CommandList from './lib/components/CommandList.svelte';
   import CommandEditor from './lib/components/CommandEditor.svelte';
@@ -8,6 +9,8 @@
   import Toast from './lib/components/Toast.svelte';
   import { commands, filteredCommands } from './lib/stores/commands';
   import type { Command } from './lib/stores/commands';
+
+  const appWindow = getCurrentWindow();
 
   let editorOpen = $state(false);
   let settingsOpen = $state(false);
@@ -23,12 +26,25 @@
     } catch (e) {
       console.error('Failed to load commands:', e);
     }
+
+    // Listen for tray events
+    const unlistenNewCommand = await listen('tray:new-command', () => {
+      editingCommand = undefined;
+      editorOpen = true;
+    });
+
+    const unlistenSettings = await listen('tray:settings', () => {
+      settingsOpen = true;
+    });
+
+    return () => {
+      unlistenNewCommand();
+      unlistenSettings();
+    };
   });
 
   // Handle window focus to reload commands
   $effect(() => {
-    const appWindow = getCurrentWindow();
-
     const unlisten = appWindow.onFocusChanged(({ payload: focused }) => {
       if (focused) {
         commands.load();
@@ -40,14 +56,8 @@
     };
   });
 
-  // Reset selection when filtered commands change
-  $effect(() => {
-    $filteredCommands;
-    selectedIndex = 0;
-  });
-
   // Global keyboard shortcuts
-  function handleKeydown(event: KeyboardEvent) {
+  async function handleKeydown(event: KeyboardEvent) {
     // Don't handle shortcuts when modal is open
     if (editorOpen || settingsOpen) return;
 
@@ -83,25 +93,24 @@
       return;
     }
 
-    // Arrow navigation
-    if (event.key === 'ArrowDown') {
+    // Delete: delete selected command
+    if (event.key === 'Delete') {
       event.preventDefault();
-      selectedIndex = Math.min(selectedIndex + 1, $filteredCommands.length - 1);
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      selectedIndex = Math.max(selectedIndex - 1, 0);
-      return;
-    }
-
-    // Enter: copy selected command
-    if (event.key === 'Enter' && $filteredCommands.length > 0) {
-      event.preventDefault();
-      const selected = $filteredCommands[selectedIndex];
-      if (selected) {
-        copyCommand(selected.id);
+      if ($filteredCommands.length > 0) {
+        const cmd = $filteredCommands[selectedIndex];
+        if (confirm(`确定删除命令 "${cmd.name}"？`)) {
+          try {
+            await commands.delete(cmd.id);
+            showToastMessage('已删除');
+            // Auto-select next or previous
+            if (selectedIndex >= $filteredCommands.length) {
+              selectedIndex = Math.max(0, $filteredCommands.length - 1);
+            }
+          } catch (e) {
+            console.error('Failed to delete:', e);
+            showToastMessage('删除失败');
+          }
+        }
       }
       return;
     }
@@ -140,25 +149,36 @@
 
   async function hideWindow() {
     try {
-      const appWindow = getCurrentWindow();
       await appWindow.hide();
     } catch (e) {
       console.error('Failed to hide window:', e);
     }
+  }
+
+  async function startDragging(e: MouseEvent) {
+    // Only allow left mouse button
+    if (e.buttons !== 1) return;
+    // Don't drag if clicking on interactive elements
+    if ((e.target as HTMLElement).closest('button, input, a')) return;
+    await appWindow.startDragging();
   }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="app-container">
-  <header class="app-header">
+  <header class="app-header" onmousedown={startDragging}>
     <h1>CommandRepo</h1>
   </header>
 
   <main class="app-main">
     <SearchInput />
     <div class="command-list-wrapper">
-      <CommandList />
+      <CommandList
+        selectedIndex={selectedIndex}
+        onSelectedIndexChange={(index) => selectedIndex = index}
+        onCopy={copyCommand}
+      />
     </div>
   </main>
 
@@ -166,6 +186,7 @@
     <div class="shortcuts">
       <span class="shortcut"><kbd>Ctrl</kbd>+<kbd>N</kbd> 新建</span>
       <span class="shortcut"><kbd>Ctrl</kbd>+<kbd>E</kbd> 编辑</span>
+      <span class="shortcut"><kbd>Del</kbd> 删除</span>
       <span class="shortcut"><kbd>Ctrl</kbd>+<kbd>,</kbd> 设置</span>
       <span class="shortcut"><kbd>Esc</kbd> 隐藏</span>
     </div>
@@ -217,7 +238,7 @@
   .app-footer {
     padding: 0.5rem 1rem;
     border-top: 1px solid var(--border);
-    background: var(--bg-secondary);
+    background: rgba(42, 42, 42, 0.98);
     flex-shrink: 0;
   }
 
@@ -230,7 +251,7 @@
 
   .shortcut {
     font-size: 0.75rem;
-    color: var(--text-tertiary);
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .shortcut kbd {
@@ -238,9 +259,10 @@
     padding: 0.15rem 0.35rem;
     font-size: 0.7rem;
     font-family: monospace;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
+    background: rgba(68, 68, 68, 0.9);
+    border: 1px solid rgba(85, 85, 85, 0.8);
     border-radius: 3px;
     margin-right: 0.15rem;
+    color: rgba(255, 255, 255, 0.95);
   }
 </style>
