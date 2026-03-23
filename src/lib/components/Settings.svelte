@@ -46,7 +46,7 @@
           <h3>快捷键</h3>
           <div class="setting-item">
             <span>全局快捷键</span>
-            <code class="shortcut-badge">{$settings.shortcut}</code>
+            <code class="shortcut-badge">{$settings.shortcuts.global}</code>
           </div>
           <p class="hint">按下快捷键可快速打开应用</p>
         </section>
