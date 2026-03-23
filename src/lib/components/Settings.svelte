@@ -1,6 +1,7 @@
 <script lang="ts">
   import { settings } from '../stores/settings';
   import { commands } from '../stores/commands';
+  import ShortcutRecorder from './ShortcutRecorder.svelte';
   import { exportToFile, importFromFile } from '../utils/fileOperations';
 
   interface Props {
@@ -9,6 +10,36 @@
   }
 
   let { open, onclose }: Props = $props();
+
+  // Shortcut configuration
+  const shortcutItems = [
+    { key: 'global', label: '全局快捷键（打开主窗口）' },
+    { key: 'newCommand', label: '新建命令' },
+    { key: 'editSelected', label: '编辑选中' },
+    { key: 'deleteSelected', label: '删除选中' },
+    { key: 'openSettings', label: '打开设置' },
+    { key: 'export', label: '导出' },
+    { key: 'import', label: '导入' },
+    { key: 'close', label: '关闭窗口/弹窗' },
+  ] as const;
+
+  async function handleShortcutChange(key: string, value: string) {
+    try {
+      await settings.updateShortcut(key, value);
+    } catch (e) {
+      alert('更新快捷键失败');
+    }
+  }
+
+  async function handleResetShortcuts() {
+    if (confirm('确定恢复默认快捷键设置？')) {
+      try {
+        await settings.resetShortcuts();
+      } catch (e) {
+        alert('恢复默认设置失败');
+      }
+    }
+  }
 
   async function handleExport() {
     await exportToFile(
@@ -44,11 +75,22 @@
       <div class="modal-body">
         <section class="settings-section">
           <h3>快捷键</h3>
-          <div class="setting-item">
-            <span>全局快捷键</span>
-            <code class="shortcut-badge">{$settings.shortcuts.global}</code>
+          <div class="shortcut-list">
+            {#each shortcutItems as item}
+              <div class="shortcut-item">
+                <span class="shortcut-label">{item.label}</span>
+                <ShortcutRecorder
+                  value={$settings.shortcuts[item.key]}
+                  disabled={item.key === 'global'}
+                  onchange={(val: string) => handleShortcutChange(item.key, val)}
+                />
+              </div>
+            {/each}
           </div>
-          <p class="hint">按下快捷键可快速打开应用</p>
+          <button class="btn btn-secondary" onclick={handleResetShortcuts}>
+            恢复默认
+          </button>
+          <p class="hint">全局快捷键需要在应用重启后生效</p>
         </section>
 
         <section class="settings-section">
@@ -191,6 +233,26 @@
     opacity: 0.5;
   }
 
+  .shortcut-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .shortcut-label {
+    color: #aaa;
+    font-size: 0.9rem;
+  }
+
   .setting-item input {
     padding: 0.4rem 0.6rem;
     background: #2a2a2a;
@@ -200,15 +262,6 @@
     font-size: 0.85rem;
     width: 150px;
     text-align: right;
-  }
-
-  .shortcut-badge {
-    background: #333;
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-family: monospace;
-    color: #fff;
   }
 
   .button-group {

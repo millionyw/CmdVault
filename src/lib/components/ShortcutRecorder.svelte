@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
   interface Props {
     value: string;
     disabled?: boolean;
+    onchange?: (value: string) => void;
   }
 
-  let { value, disabled = false }: Props = $props();
-  const dispatch = createEventDispatcher<{ change: string }>();
+  let { value, disabled = false, onchange }: Props = $props();
 
   let recording = $state(false);
   let buttonRef: HTMLButtonElement | undefined = $state();
@@ -54,7 +52,7 @@
     const shortcut = parts.join('+');
 
     recording = false;
-    dispatch('change', shortcut);
+    onchange?.(shortcut);
   }
 
   function handleBlur() {
