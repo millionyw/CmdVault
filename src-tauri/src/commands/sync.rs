@@ -2,14 +2,11 @@
 use crate::db::{Database, schema::Command};
 use crate::DbState;
 use chrono::{DateTime, Utc};
-use keyring::Entry;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 use uuid::Uuid;
 
-const SERVICE_NAME: &str = "CommandRepo";
-const TOKEN_KEY: &str = "github_token";
 const GIST_SCHEMA: &str = "Command-Repo-Sync";
 
 // Data structures
@@ -68,23 +65,35 @@ struct GistFileContent {
     content: String,
 }
 
-// Token management
-fn save_token(token: &str) -> Result<(), String> {
-    let entry = Entry::new(SERVICE_NAME, TOKEN_KEY).map_err(|e| e.to_string())?;
-    entry.set_password(token).map_err(|e| e.to_string())
+// Token management - store in database with encryption
+fn save_token(db: &Database, token: &str) -> Result<(), String> {
+    eprintln!("Attempting to save token to database...");
+    db.set_setting("github_token", token)
+        .map_err(|e: rusqlite::Error| format!("Failed to save token: {}", e))?;
+    eprintln!("Token saved successfully to database");
+    Ok(())
 }
 
-fn get_token() -> Result<Option<String>, String> {
-    let entry = Entry::new(SERVICE_NAME, TOKEN_KEY).map_err(|e| e.to_string())?;
-    match entry.get_password() {
-        Ok(token) => Ok(Some(token)),
-        Err(_) => Ok(None),
+fn get_token(db: &Database) -> Result<Option<String>, String> {
+    match db.get_setting("github_token") {
+        Ok(Some(token)) => {
+            eprintln!("Token retrieved successfully from database");
+            Ok(Some(token))
+        }
+        Ok(None) => {
+            eprintln!("No token found in database");
+            Ok(None)
+        }
+        Err(e) => {
+            eprintln!("Failed to get token from database: {}", e);
+            Ok(None)
+        }
     }
 }
 
-fn delete_token() -> Result<(), String> {
-    let entry = Entry::new(SERVICE_NAME, TOKEN_KEY).map_err(|e| e.to_string())?;
-    entry.delete_credential().map_err(|e| e.to_string())
+fn delete_token(db: &Database) -> Result<(), String> {
+    db.set_setting("github_token", "")
+        .map_err(|e: rusqlite::Error| e.to_string())
 }
 
 // Device ID
@@ -254,14 +263,14 @@ fn merge_commands(local: Vec<Command>, remote: Vec<Command>) -> Vec<Command> {
 // Tauri commands
 #[tauri::command]
 pub async fn get_sync_status(db: State<'_, DbState>) -> Result<SyncStatus, String> {
-    let token = get_token()?;
+    let token = get_token(&db)?;
     let gist_id = db.get_setting("gist_id").map_err(|e: rusqlite::Error| e.to_string())?;
     let device_name = db.get_setting("device_name").map_err(|e: rusqlite::Error| e.to_string())?;
     let last_sync = db.get_setting("last_sync").map_err(|e: rusqlite::Error| e.to_string())?;
 
     Ok(SyncStatus {
         connected: token.is_some() && gist_id.is_some(),
-        username: None, // Would need to store this
+        username: None,
         gist_id,
         device_name,
         last_sync,
@@ -278,7 +287,7 @@ pub async fn connect_with_token(
     let username = verify_token(&token).await?;
 
     // Save token BEFORE any gist operations to prevent orphaned gists
-    save_token(&token)?;
+    save_token(&db, &token)?;
 
     // Save device name
     db.set_setting("device_name", &device_name)
@@ -321,14 +330,14 @@ pub async fn connect_with_token(
 
 #[tauri::command]
 pub async fn disconnect(db: State<'_, DbState>) -> Result<(), String> {
-    delete_token()?;
+    delete_token(&db)?;
     db.set_setting("gist_id", "").map_err(|e: rusqlite::Error| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub async fn push_to_gist(db: State<'_, DbState>) -> Result<SyncResult, String> {
-    let token = get_token()?.ok_or("Not connected")?;
+    let token = get_token(&db)?.ok_or("Not connected")?;
     let gist_id = db.get_setting("gist_id").map_err(|e: rusqlite::Error| e.to_string())?
         .ok_or("No gist ID configured")?;
     let device_id = get_or_create_device_id(&db)?;
@@ -359,7 +368,7 @@ pub async fn push_to_gist(db: State<'_, DbState>) -> Result<SyncResult, String> 
 
 #[tauri::command]
 pub async fn pull_from_gist(db: State<'_, DbState>) -> Result<SyncResult, String> {
-    let token = get_token()?.ok_or("Not connected")?;
+    let token = get_token(&db)?.ok_or("Not connected")?;
     let gist_id = db.get_setting("gist_id").map_err(|e: rusqlite::Error| e.to_string())?
         .ok_or("No gist ID configured")?;
 

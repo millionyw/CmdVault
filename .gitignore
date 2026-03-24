@@ -33,3 +33,4 @@ src-tauri/gen
 .claude/*
 commands-*.json
 icon_example.png
+docs/TODO.txt

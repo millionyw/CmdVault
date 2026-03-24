@@ -53,9 +53,11 @@ function createSettingsStore() {
     async load() {
       try {
         const shortcuts = await invoke<Shortcuts>('get_shortcuts');
+        const syncStatus = await invoke<SyncStatus>('get_sync_status');
         set({
           ...defaultSettings,
           shortcuts,
+          sync: syncStatus,
         });
       } catch (e) {
         console.error('Failed to load settings:', e);
@@ -109,14 +111,24 @@ function createSettingsStore() {
       update(s => ({ ...s, sync: { connected: false } }));
     },
 
-    async pushToGist(): Promise<void> {
-      const result = await invoke<{ message: string }>('push_to_gist');
-      console.log(result.message);
+    async pushToGist(): Promise<{ message: string }> {
+      try {
+        const result = await invoke<{ message: string }>('push_to_gist');
+        return result;
+      } catch (e) {
+        console.error('Push failed:', e);
+        throw new Error(typeof e === 'string' ? e : (e as Error).message || '未知错误');
+      }
     },
 
-    async pullFromGist(): Promise<void> {
-      const result = await invoke<{ message: string }>('pull_from_gist');
-      console.log(result.message);
+    async pullFromGist(): Promise<{ message: string }> {
+      try {
+        const result = await invoke<{ message: string }>('pull_from_gist');
+        return result;
+      } catch (e) {
+        console.error('Pull failed:', e);
+        throw new Error(typeof e === 'string' ? e : (e as Error).message || '未知错误');
+      }
     },
 
     async linkGist(gistId: string): Promise<void> {

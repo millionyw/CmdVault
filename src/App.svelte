@@ -22,12 +22,13 @@
   let selectedIndex = $state(0);
   let cleanupFns: (() => void)[] = [];
 
-  // Load commands on mount
+  // Load commands and settings on mount
   onMount(async () => {
     try {
       await commands.load();
+      await settings.load();
     } catch (e) {
-      console.error('Failed to load commands:', e);
+      console.error('Failed to load app data:', e);
     }
 
     // Listen for tray events
