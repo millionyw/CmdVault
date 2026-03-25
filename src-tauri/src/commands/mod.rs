@@ -1,7 +1,10 @@
+mod autostart;
 mod command;
 mod export;
 mod shortcut;
 mod sync;
+
+pub use autostart::*;
 
 use crate::db::Database;
 use std::sync::Arc;

@@ -25,6 +25,7 @@ export interface Settings {
   shortcuts: Shortcuts;
   sync: SyncStatus;
   theme: 'light' | 'dark' | 'system';
+  autostart: boolean;
 }
 
 const defaultShortcuts: Shortcuts = {
@@ -42,6 +43,7 @@ const defaultSettings: Settings = {
   shortcuts: defaultShortcuts,
   sync: { connected: false },
   theme: 'system',
+  autostart: false,
 };
 
 function createSettingsStore() {
@@ -54,10 +56,12 @@ function createSettingsStore() {
       try {
         const shortcuts = await invoke<Shortcuts>('get_shortcuts');
         const syncStatus = await invoke<SyncStatus>('get_sync_status');
+        const autostart = await invoke<boolean>('get_autostart_enabled');
         set({
           ...defaultSettings,
           shortcuts,
           sync: syncStatus,
+          autostart,
         });
       } catch (e) {
         console.error('Failed to load settings:', e);
@@ -137,6 +141,11 @@ function createSettingsStore() {
 
     async copyGistId(): Promise<string> {
       return await invoke<string>('copy_gist_id');
+    },
+
+    async toggleAutostart(enabled: boolean): Promise<void> {
+      await invoke('set_autostart_enabled', { enabled });
+      update(s => ({ ...s, autostart: enabled }));
     },
   };
 }

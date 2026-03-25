@@ -21,6 +21,9 @@
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister"
+    "global-shortcut:allow-unregister",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

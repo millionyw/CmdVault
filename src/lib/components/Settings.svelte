@@ -191,7 +191,22 @@
         </section>
 
         <section class="settings-section">
-          <h3>数据管理</h3>
+          <h3>开机自启动</h3>
+          <div class="setting-item">
+            <span>开机时自动启动 CommandRepo</span>
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                checked={$settings.autostart}
+                onchange={(e) => settings.toggleAutostart(e.currentTarget.checked)}
+              />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <p class="hint">启用后，应用将在系统启动时自动运行</p>
+        </section>
+
+        <section class="settings-section">
           <div class="button-group">
             <button class="btn btn-secondary" onclick={handleExport}>
               <span class="btn-icon">&#x1F4E4;</span>
@@ -764,5 +779,53 @@
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.85em;
     color: #e5e5e5;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: relative;
+    display: block;
+    width: 44px;
+    height: 24px;
+    background: #333;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #aaa;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background: #3b82f6;
+  }
+
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+    background: #fff;
+  }
+
+  .toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
   }
 </style>
