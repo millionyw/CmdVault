@@ -29,8 +29,14 @@ dist-ssr
 # Tauri
 src-tauri/target
 src-tauri/gen
-.gitnexus/*
-.claude/*
+
+# Development tools and AI configs
+.gitnexus/
+.claude/
+CLAUDE.md
+AGENTS.md
+docs/
+
+# Other
 commands-*.json
 icon_example.png
-docs/TODO.txt
